@@ -92,3 +92,6 @@ target/
 # Papers
 /docs/papers/*
 .Rproj.user
+
+# Simulation data
+/data/interim/simulation_outputs/*
