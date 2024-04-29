@@ -5,18 +5,18 @@
 Legend: ✔️ - available from Welch and Goyal (2022) data, ❌ - not available, ❓ - not sure, ❗ - potential problems (e.g. look-ahead bias).
 
 [VoC]: 
-- Target `R`: monthly excess return of the CRSP value-weighted index (`R = CRSP_SPvw - tbl` or `-Rfree`. [WG]: The risk-free rate from 1920 to 2005 is the Treasury-bill rate. ❓ `Rfree` and `tbl` columns, after annualizing `tbl` do not match but they are very close to each other, where `tbl` appears smoother (see plots below). I used `tbl` for the risk-free rate.
+- Target `R`: monthly excess return of the CRSP value-weighted index (`R = CRSP_SPvw - Rfree` or `-tbl`. [WG]: The risk-free rate from 1920 to 2005 is the Treasury-bill rate. `Rfree` and `tbl` columns, after annualizing `tbl` do not match but they are very close to each other, where `tbl` appears smoother (see plots below). **I looked at results produced by VoC matlab code, in particular `Y` variable. I get almost perfect matching between my `R` and their `Y` if I use `Rfree` for computing `R`, NOT `tbl`!**
 - 15 predictor variables from Welch and Goyal (2008) available monthly over the sample from 1926 to 2020.
 
 [WG]: Our dependent variable is always the equity premium, that is, the total rate of return on the stock market minus the prevailing short-term interest rate. We use S&P 500 index returns from 1926 to 2005 from Center for Research in Security Press (CRSP) **month-end values**. Stock returns are the **continuously compounded** returns on the S&P 500 index, **including dividends**. Risk-free rate is the Treasury-bill rate. 
   - ✔️ `dfy` - Default Yield Spread is the difference between BAA and AAA-rated corporate bond yields. (`dfy = BAA - AAA`) 
-  - ✔️ `dfr` - The Default Return Spread is the difference between long-term corporate bond and long-term government bond returns (`dfr = corpr - lty`). ❓ Check if `corpr` is the long-term corporate bond return.
+  - ✔️ `dfr` - The Default Return Spread is the difference between long-term corporate bond and long-term government bond returns (`dfr = corpr - ltr`).
   - ✔️ `infl` - Inflation is the Consumer Price Index. ❗ Because inflation information is released only in the following month, we **wait for one month before using it** in our monthly regressions
   - ✔️ `svar` - Stock Variance is computed as sum of squared daily returns on the S&P 500.
   - de (Dividend Payout Ratio)
   - ✔️ `lty` - Long-term government bond yield
   - ✔️ `tbl` - Treasury Bills. Treasury-bill rates from 1934 to 2005 are the 3-Month Treasury Bill: Secondary Market Rate from the economic research data base at the Federal Reserve Bank at St. Louis (FRED)
-  - ✔️ `ltr` - Long Term Rate of Returns
+  - ✔️ `ltr` - Long Term Rate of Returns 
   - ✔️ `tms` - The Term Spread is the difference between the long term yield on government bonds and the Treasury-bill. (`tms = lty - tbl`)
   - ✔️  `dp` - Dividend Price Ratio is the difference between the log of dividends and the log of prices. Dividends are 12-month moving sums of dividends paid on the S&P 500 index. (`D12` column). 
   - ✔️ `dy` - The Dividend Yield (d/y) is the difference between the log of dividends and the log of lagged prices. 
@@ -34,6 +34,9 @@ Data originally from Welch and Goyal (2008) and updated by Goyal (2022):
     [Updated data (up to 2022)](https://docs.google.com/spreadsheets/d/1g4LOaRj4TvwJr9RIaA_nwrXXWTOy46bP/edit?usp=share_link&ouid=113571510202500088860&rtpof=true&sd=true)
 
 All the links are provided on the [Goyal's website](https://sites.google.com/view/agoyal145).
+
+### **Comparison with data used in VoC**
+All independent variables, except for `b/m` variable, have a perfect match with my data. The same is true for the returns, i.e. dependent variable. Variable `b/m` is provided directly by Goyal's methodology and it is not altered here. Thus, I can not access where the difference comes from. Note that the authors of VoC used slightly older dataset, so it could be that Goyal and Welch updated the methodology for calculating `b/m` in the meantime.
 
 ## Notes from "Empirical Asset Pricing via ML"
 

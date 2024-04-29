@@ -1,8 +1,8 @@
-# Reproduction of results the Virtue of Complexity (VoC) paper
+# Reproduction of results from "The Virtue of Complexity" (VoC) paper
 
 ==============================
 
-This project is made for the purpose of reproducing main empirical findings from Kelly, Malamud and Zhou, 2023, "The virtue of complexity in return prediction", Journal of Finance.
+This project reproduces main empirical findings from Kelly, Malamud and Zhou, 2023, "The virtue of complexity in return prediction", Journal of Finance.
 
 Project Organization
 ------------
@@ -19,7 +19,7 @@ Project Organization
     │    ├── papers        <- Papers used for the project.
     │    └── notes         <- Notes on the project, data, and code. 
     │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    ├── models             <- The main script for fitting models for different seeds used for making RFFs
     │
     ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
     │                         the creator's initials, and a short `-` delimited description, e.g.
