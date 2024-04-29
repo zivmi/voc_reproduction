@@ -163,7 +163,9 @@ if __name__ == '__main__':
         P_max = max(P_list)
         delta_t = config['delta_t']
         max_seed = config['max_seed']
-        model_dict = {T: [Ridge(alpha=T*z, fit_intercept=False) for z in z_list] for T in T_list}
+        model_dict = {T: [Ridge(alpha=np.square(T*z), fit_intercept=True) for z in z_list] for T in T_list}
+        # print the solver used in the ridge regression
+        print(f"Solver used in ridge regression: {model_dict[T_list[0]][0].solver}")
 
     # inputs
     G = data.iloc[:,:-1].values # remove last column which is the target variable
