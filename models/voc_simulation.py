@@ -86,7 +86,7 @@ def single_run(run_inputs, run_params, delta_t=1):
 
     # helper functions for calculating standardization
     def my_std(x):
-        return np.sqrt(np.sum(np.square(x - x.mean(axis=0)))/(len(x)-1))
+        return np.sqrt(np.sum(np.square(x - x.mean(axis=0)), axis=0)/(len(x)-1))
 
     def standardize(t):
         """
@@ -233,7 +233,7 @@ def run_simulation(seed, path_to_processed, path_to_outputs):
 
 if __name__ == '__main__':
     path_to_processed = "data/processed" # specify this
-    path_to_outputs = "data/interim/final_simulation_outputs" # specify this
+    path_to_outputs = "data/interim/final2_simulation_outputs" # specify this
 
     # load the last and the max seeds from the config file
     with open(path_to_outputs+"/config.json", 'r') as fp:
