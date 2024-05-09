@@ -7,7 +7,6 @@ This project reproduces main empirical findings from Kelly, Malamud and Zhou, 20
 Project Organization
 ------------
 
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
     ├── README.md          <- The top-level README for using this project.
     ├── data
     │   ├── external       <- Data from extending the paper reproduction, e.g. additional variables.
@@ -30,26 +29,8 @@ Project Organization
     |   ├── presentation   <- Presentation slides and notes.
     │   └── figures        <- Generated graphics and figures to be used in reporting
     │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
+    └── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
+                              generated with `conda list -e > requirements.txt`
+
 
 --------
