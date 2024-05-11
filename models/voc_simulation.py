@@ -2,9 +2,103 @@ import json
 import time
 import numpy as np
 import pandas as pd
+from scipy.linalg import svd
 from sklearn.linear_model import Ridge
 from sklearn import set_config
 set_config(assume_finite=True)  # up to 10% speedup
+
+
+def ridgesvd(Y, X, lambda_list):
+    """
+    Computes ridge regression coefficients using singular value decomposition.
+    
+    Parameters:
+        Y : array_like
+            Target vector of shape (T,).
+        X : array_like
+            Design matrix of shape (T, P).
+        lambda_list : array_like
+            Array of ridge regularization parameters of shape (L,).
+    
+    Returns:
+        B : ndarray
+            Ridge regression coefficients of shape (P, L).
+    """
+    if np.isnan(X).sum() + np.isnan(Y).sum() > 0:
+        raise ValueError("Missing data")
+
+    L = len(lambda_list)
+    # MATLAB uses 'gesvd', default is 'gesdd'
+    U, d, Vt = svd(X, check_finite=False, lapack_driver='gesvd') 
+    T, P = X.shape
+
+    if T >= P:
+        compl = np.zeros((P, T - P))
+    else:
+        compl = np.zeros((P - T, T))
+    
+    B = np.zeros((P, L))
+
+    for l, lam in enumerate(lambda_list):
+        if T >= P:
+            B[:, l] = Vt.T @ np.hstack((np.diag(d / (d**2 + lam)), compl)) @ U.T @ Y
+        else:
+            B[:, l] = Vt.T @ np.vstack((np.diag(d / (d**2 + lam)), compl)) @ U.T @ Y
+    
+    return B
+
+def get_beta(Y, X, z_list):
+    """
+    Computes beta coefficients using ridge regression with SVD.
+    
+    Parameters:
+        Y : array_like
+            Target vector of shape (T,).
+        X : array_like
+            Features matrix of shape (T, P).
+        z_list : array_like
+            Array of ridge regularization parameters of shape (L,).
+    
+    Returns:
+        B : ndarray
+            Ridge regression coefficients of shape (P, L).
+    """
+    if np.isnan(X).sum() + np.isnan(Y).sum() > 0:
+        raise ValueError("Missing data")
+    
+    L_ = len(z_list)
+    T_ = X.shape[0]
+    P_ = X.shape[1]
+
+    if P_ > T_:
+        a_matrix = X @ X.T / T_  # T_ x T_
+    else:
+        a_matrix = X.T @ X / T_  # P_ x P_
+
+    U_a, d_a, _ = svd(a_matrix, check_finite=False, lapack_driver='gesvd')
+    scale_eigval = ((d_a * T_)**(-1/2))
+
+    # originally only the X.T version was implemented, but that
+    # causes error in multiplication of matrices even in the original
+    # MATLAB code. The second brach (P<=T) is not used because in that
+    # case we call 'ridgesvd' instead of 'get_beta'.
+    if P_ > T_:
+        W = X.T @ U_a @ np.diag(scale_eigval)
+    else:
+        W = X @ U_a @ np.diag(scale_eigval)
+
+    a_matrix_eigval = d_a #.reshape(-1, 1)  # P_ x 1
+    
+    # FIXME the following code does not run for P<=T
+    # Fix it so that it runs. 
+    signal_times_return = X.T @ Y / T_  # (SR): M x 1
+    signal_times_return_times_v = W.T @ signal_times_return  # V' * (SR): T_ x 1
+
+    B = np.zeros((P_, L_))
+    for l, lam in enumerate(z_list):
+        B[:, l] = W @ np.diag(1 / (a_matrix_eigval + lam)) @ signal_times_return_times_v
+
+    return B
 
 
 def make_rff(G, P, gamma=2, seed=59148, output_type='numpy'):
@@ -48,11 +142,10 @@ def single_run(run_inputs, run_params, delta_t=1):
 
     Parameters:
         run_inputs: tuple of inputs S (RFFs), and returns R already shifted once
-        run_params: tuple of parameters T_list, P_dict, model_dict. model_dict is 
-            a dictionary of models for each T in T_list. Each model is a list of Ridge
-            regressions with different lambdas. Lambda is determined by T*z, where z is
-            a parameter that is tracked by the index of the model in the list. P_dict contains
-            lists of number of features to use for each T. 
+        run_params: tuple of parameters T_list, P_dict, lambda_dict. lambda_dict is 
+            a dictionary of lambda_list's for each T in T_list. Each lambda is 
+            T*z, where z is a parameter from 0.001 to 1000, step: 1 order of magnitude.
+            P_dict contains lists of number of features to use for each T. 
         delta_t: time step for retraining the model. For example, if delta_t=1, the model
             is retrained at each time step. If delta_t=10, the model is retrained every 10
             time steps.
@@ -66,14 +159,12 @@ def single_run(run_inputs, run_params, delta_t=1):
     """
     # unpack inputs and parameters
     S, R = run_inputs
-    T_list, P_dict, model_dict = run_params
-    min_T = min(T_list)  # usually =12
-    num_of_models = len(model_dict[T_list[0]])
-    num_of_Ps = len(P_dict["12"])
+    T_list, P_dict, z_list = run_params
+    min_T = min(T_list)  # usually = 12
     tmax = len(S)
 
     # initialize arrays for storing results. Dimensions: (ts, Ts, Ps, lambdas)
-    output_shape = (tmax-min_T, len(T_list), num_of_Ps, num_of_models)
+    output_shape = (tmax-min_T, len(T_list), len(P_dict["12"]), len(z_list))
     beta_norm_sq = np.full(shape=output_shape,
                            fill_value=np.nan,
                            dtype=np.float64)
@@ -90,8 +181,9 @@ def single_run(run_inputs, run_params, delta_t=1):
 
     def standardize(t):
         """
-        Standardize training sets (one for each window T) and test set of len=1,
-        at time t. It takes S as implicit input.
+        Standardize training sets: one for each window T, and standardize test set,
+        which in this code is of len=1. S is an implicit input, t is timestamp of the
+        test set.
         """
         sets = []
 
@@ -122,28 +214,19 @@ def single_run(run_inputs, run_params, delta_t=1):
             trainY = R[t-T:t] # already shifted
 
             P_list = P_dict[str(T)] # json keys must be strings
-            model_list = model_dict[T]
-            grid = [(P_index, model_index)
-                for P_index in range(num_of_Ps)
-                for model_index in range(num_of_models)]
 
-            for P_index, model_index in grid:
-                P = P_list[P_index]
-                # get model of appropriate shrinkage lambda=T*z, z is tracked by model_index
-                # the value of z is equal to z_list[model_index]
-                model = model_list[model_index]
+            for P_index, P in enumerate(P_list):
+                if P <= T:
+                    B=ridgesvd(trainY, trainX[:, :P], z_list*T)
+                else:
+                    B=get_beta(trainY, trainX[:, :P], z_list)
 
-                # train models using the first P features from S matrix
-                model.fit(trainX[:, :P], trainY)
-                forecastY = model.predict(forecastX[:P].reshape(1, -1))
+                forecastY = forecastX[:P] @ B
 
                 # store results
-                beta_norm_sq[t-min_T, T_index, P_index,
-                                model_index] = np.sum(np.square(model.coef_))
-                return_forecasts[t-min_T, T_index,
-                                    P_index, model_index] = forecastY[0]
-                strategy_returns[t-min_T, T_index, P_index,
-                                    model_index] = forecastY[0] * R[t]
+                beta_norm_sq[t-min_T, T_index, P_index, :] = np.sum(np.square(B), axis=0)
+                return_forecasts[t-min_T, T_index, P_index, :] = forecastY
+                strategy_returns[t-min_T, T_index, P_index, :] = forecastY * R[t]
 
     return beta_norm_sq, return_forecasts, strategy_returns
 
@@ -186,19 +269,15 @@ def run_simulation(seed, path_to_processed, path_to_outputs):
         P_dict = config['P_dict']
         P_max = config['P_max']
         delta_t = config['delta_t']
-        solver = config['solver']
-        fit_intercept = config['fit_intercept']
 
     # create dictionary of models for each T in T_list
-    model_dict = {T: [Ridge(alpha=T*z, fit_intercept=fit_intercept, solver=solver) 
-                        for z in z_list] for T in T_list}
 
     # inputs
     G = data.iloc[:, :-1].values # remove last column which is the target variable
     R = data.iloc[:, -1].values  # target variable, already shifted in prereprocessing
     S = make_rff(G, P_max, gamma=gamma, seed=seed, output_type='numpy')
     run_inputs = (S, R)
-    run_params = (T_list, P_dict, model_dict)
+    run_params = (T_list, P_dict, z_list)
 
     st = time.time()
 
@@ -233,7 +312,7 @@ def run_simulation(seed, path_to_processed, path_to_outputs):
 
 if __name__ == '__main__':
     path_to_processed = "data/processed" # specify this
-    path_to_outputs = "data/interim/final2_simulation_outputs" # specify this
+    path_to_outputs = "data/interim/simulation_outputs_voc_solver" # specify this
 
     # load the last and the max seeds from the config file
     with open(path_to_outputs+"/config.json", 'r') as fp:

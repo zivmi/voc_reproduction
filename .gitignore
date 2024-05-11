@@ -95,3 +95,9 @@ target/
 
 # Simulation data
 /data/interim/simulation_outputs/*
+/data/interim/simulation_outputs_voc_solver/*
+/data/interim/simulation_outputs_sklrn_ridge/*
+
+*.png
+/reports/*
+/src/*
