@@ -1,4 +1,7 @@
-def ridgesvd(Y, X, lambd):
+import numpy as np
+from scipy.linalg import svd
+
+def ridgesvd(Y, X, lambda_list):
     """
     Computes ridge regression coefficients using singular value decomposition.
     
@@ -7,7 +10,7 @@ def ridgesvd(Y, X, lambd):
             Target vector of shape (T,).
         X : array_like
             Design matrix of shape (T, P).
-        lambd : array_like
+        lambda_list : array_like
             Array of ridge regularization parameters of shape (L,).
     
     Returns:
@@ -17,7 +20,7 @@ def ridgesvd(Y, X, lambd):
     if np.isnan(X).sum() + np.isnan(Y).sum() > 0:
         raise ValueError("Missing data")
 
-    L = len(lambd)
+    L = len(lambda_list)
     # MATLAB uses 'gesvd', default is 'gesdd'
     U, d, Vt = svd(X, check_finite=False, lapack_driver='gesvd') 
     T, P = X.shape
@@ -29,15 +32,15 @@ def ridgesvd(Y, X, lambd):
     
     B = np.zeros((P, L))
 
-    for l in range(L):
+    for l, lam in enumerate(lambda_list):
         if T >= P:
-            B[:, l] = Vt.T @ np.hstack((np.diag(d / (d**2 + lambd[l])), compl)) @ U.T @ Y
+            B[:, l] = Vt.T @ np.hstack((np.diag(d / (d**2 + lam)), compl)) @ U.T @ Y
         else:
-            B[:, l] = Vt.T @ np.vstack((np.diag(d / (d**2 + lambd[l])), compl)) @ U.T @ Y
+            B[:, l] = Vt.T @ np.vstack((np.diag(d / (d**2 + lam)), compl)) @ U.T @ Y
     
     return B
 
-def get_beta(Y, X, lambda_list):
+def get_beta(Y, X, z_list):
     """
     Computes beta coefficients using ridge regression with SVD.
     
@@ -46,7 +49,7 @@ def get_beta(Y, X, lambda_list):
             Target vector of shape (T,).
         X : array_like
             Features matrix of shape (T, P).
-        lambda_list : array_like
+        z_list : array_like
             Array of ridge regularization parameters of shape (L,).
     
     Returns:
@@ -56,7 +59,7 @@ def get_beta(Y, X, lambda_list):
     if np.isnan(X).sum() + np.isnan(Y).sum() > 0:
         raise ValueError("Missing data")
     
-    L_ = len(lambda_list)
+    L_ = len(z_list)
     T_ = X.shape[0]
     P_ = X.shape[1]
 
@@ -71,7 +74,7 @@ def get_beta(Y, X, lambda_list):
     # originally only the X.T version was implemented, but that
     # causes error in multiplication of matrices even in the original
     # MATLAB code. The second brach (P<=T) is not used because in that
-    # regime 'ridgesvd' is used, not 'get_beta'.
+    # case we call 'ridgesvd' instead of 'get_beta'.
     if P_ > T_:
         W = X.T @ U_a @ np.diag(scale_eigval)
     else:
@@ -85,7 +88,7 @@ def get_beta(Y, X, lambda_list):
     signal_times_return_times_v = W.T @ signal_times_return  # V' * (SR): T_ x 1
 
     B = np.zeros((P_, L_))
-    for l in range(L_):
-        B[:, l] = W @ np.diag(1 / (a_matrix_eigval + lambda_list[l])) @ signal_times_return_times_v
+    for l, lam in enumerate(z_list):
+        B[:, l] = W @ np.diag(1 / (a_matrix_eigval + lam)) @ signal_times_return_times_v
 
     return B
