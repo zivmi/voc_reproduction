@@ -94,9 +94,8 @@ target/
 .Rproj.user
 
 # Simulation data
-/data/interim/simulation_outputs/*
-/data/interim/simulation_outputs_voc_solver/*
-/data/interim/simulation_outputs_sklrn_ridge/*
+/data/interim/*
+!/data/interim/interim_nonstd_data.csv
 
 *.png
 /reports/*
