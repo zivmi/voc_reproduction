@@ -99,4 +99,4 @@ target/
 
 *.png
 /reports/*
-/src/*
+!/src/*
