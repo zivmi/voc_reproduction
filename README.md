@@ -29,8 +29,17 @@ Project Organization
     |   ├── presentation   <- Presentation slides and notes.
     │   └── figures        <- Generated graphics and figures to be used in reporting
     │
-    └── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
+    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
                               generated with `conda list -e > requirements.txt`
+    └── src                <- Run them from terminal
+        │
+        ├── features       <- make RFFs
+        │
+        ├── models         <- ridge_solvers                    
+        │
+        ├── utils          <- unpack_results
+        │
+        └── visualization  <- Scripts to create main VoC figures 
 
 
 --------

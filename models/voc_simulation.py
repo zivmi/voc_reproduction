@@ -2,45 +2,18 @@ import json
 import time
 import numpy as np
 import pandas as pd
+from scipy.linalg import svd
 from sklearn.linear_model import Ridge
 from sklearn import set_config
 set_config(assume_finite=True)  # up to 10% speedup
 
+import sys
+sys.path.append('.')
 
-def make_rff(G, P, gamma=2, seed=59148, output_type='numpy'):
-    """
-    Generate P Random Fourier Features from the set of independent variables G.
+from src.features.build_features import make_rff
+from src.models.ridge_solvers import ridgesvd, get_beta
 
-    Parameters:
-        G: 2d numpy array of independent variables, shape (n_samples, n_features)
-        where n_samples is the number of timestamps 
-        P: number of RFFs to generate
-        gamma: scaling factor in the sin and cos functions 
-        seed: random seed 
-        output_type: 'numpy' or 'pandas'
-
-    Returns:
-        S: matrix of random features, the shape of S is (len(G), P)
-    """
-    np.random.seed(seed)
-    omegas = np.random.normal(0, 1, (15, int(P/2)))
-    A = gamma * G @ omegas
-    S_sin = np.sin(A)
-    S_cos = np.cos(A)
-    S = np.full((S_sin.shape[0], S_sin.shape[1] +
-                S_cos.shape[1]), fill_value=np.nan, dtype=S_sin.dtype)
-    S[:, 0::2] = S_sin
-    S[:, 1::2] = S_cos
-
-    if output_type == 'pandas':
-        S = pd.DataFrame(data=S, index=G.index, columns=np.arange(P))
-    elif output_type == 'numpy':
-        return S
-    else:
-        raise ValueError('output_type must be "pandas" or "numpy"')
-
-
-def single_run(run_inputs, run_params, delta_t=1):
+def single_run(run_inputs, run_params, delta_t=1, solver="voc"):
     """
     The main function for running a simulation for a fixed seed. It is wrapped by the
     run_simulation function, where inputs and parameters are handled. This function 
@@ -48,11 +21,10 @@ def single_run(run_inputs, run_params, delta_t=1):
 
     Parameters:
         run_inputs: tuple of inputs S (RFFs), and returns R already shifted once
-        run_params: tuple of parameters T_list, P_dict, model_dict. model_dict is 
-            a dictionary of models for each T in T_list. Each model is a list of Ridge
-            regressions with different lambdas. Lambda is determined by T*z, where z is
-            a parameter that is tracked by the index of the model in the list. P_dict contains
-            lists of number of features to use for each T. 
+        run_params: tuple of parameters T_list, P_dict, lambda_dict. lambda_dict is 
+            a dictionary of lambda_list's for each T in T_list. Each lambda is 
+            T*z, where z is a parameter from 0.001 to 1000, step: 1 order of magnitude.
+            P_dict contains lists of number of features to use for each T. 
         delta_t: time step for retraining the model. For example, if delta_t=1, the model
             is retrained at each time step. If delta_t=10, the model is retrained every 10
             time steps.
@@ -60,27 +32,22 @@ def single_run(run_inputs, run_params, delta_t=1):
     Returns:
         beta_norm_sq: array of **squared** L2 norm of the coefficients of the model
         return_forecasts: array of return forecasts
-        strategy_returns: array of strategy returns. Strategy returns are the product of
-            return forecasts and actual returns at each time step, or in other words the
-            trading strategy takes position in the index equal to the return forecast.
     """
     # unpack inputs and parameters
     S, R = run_inputs
-    T_list, P_dict, model_dict = run_params
-    min_T = min(T_list)  # usually =12
-    num_of_models = len(model_dict[T_list[0]])
-    num_of_Ps = len(P_dict["12"])
+    T_list, P_dict, z_list = run_params
+    min_T = min(T_list)  # usually = 12
     tmax = len(S)
 
+    if solver != "voc":
+        model_list = [[Ridge(alpha=z*T, fit_intercept=False, solver=solver) for T in T_list] for z in z_list]
+
     # initialize arrays for storing results. Dimensions: (ts, Ts, Ps, lambdas)
-    output_shape = (tmax-min_T, len(T_list), num_of_Ps, num_of_models)
+    output_shape = (tmax-min_T, len(T_list), len(P_dict["12"]), len(z_list))
     beta_norm_sq = np.full(shape=output_shape,
                            fill_value=np.nan,
                            dtype=np.float64)
     return_forecasts = np.full(shape=output_shape,
-                               fill_value=np.nan,
-                               dtype=np.float64)
-    strategy_returns = np.full(shape=output_shape,
                                fill_value=np.nan,
                                dtype=np.float64)
 
@@ -90,8 +57,9 @@ def single_run(run_inputs, run_params, delta_t=1):
 
     def standardize(t):
         """
-        Standardize training sets (one for each window T) and test set of len=1,
-        at time t. It takes S as implicit input.
+        Standardize training sets: one for each window T, and standardize test set,
+        which in this code is of len=1. S is an implicit input, t is timestamp of the
+        test set.
         """
         sets = []
 
@@ -122,30 +90,34 @@ def single_run(run_inputs, run_params, delta_t=1):
             trainY = R[t-T:t] # already shifted
 
             P_list = P_dict[str(T)] # json keys must be strings
-            model_list = model_dict[T]
-            grid = [(P_index, model_index)
-                for P_index in range(num_of_Ps)
-                for model_index in range(num_of_models)]
 
-            for P_index, model_index in grid:
-                P = P_list[P_index]
-                # get model of appropriate shrinkage lambda=T*z, z is tracked by model_index
-                # the value of z is equal to z_list[model_index]
-                model = model_list[model_index]
+            for P_index, P in enumerate(P_list):
+                if solver == "voc":
+                    if P <= T:
+                        B=ridgesvd(trainY, trainX[:, :P], [z*T for z in z_list])
+                    else:
+                        B=get_beta(trainY, trainX[:, :P], z_list)
 
-                # train models using the first P features from S matrix
-                model.fit(trainX[:, :P], trainY)
-                forecastY = model.predict(forecastX[:P].reshape(1, -1))
+                    forecastY = forecastX[:P] @ B
 
-                # store results
-                beta_norm_sq[t-min_T, T_index, P_index,
-                                model_index] = np.sum(np.square(model.coef_))
-                return_forecasts[t-min_T, T_index,
-                                    P_index, model_index] = forecastY[0]
-                strategy_returns[t-min_T, T_index, P_index,
-                                    model_index] = forecastY[0] * R[t]
+                    # store results
+                    beta_norm_sq[t-min_T, T_index, P_index, :] = np.sum(np.square(B), axis=0)
+                    return_forecasts[t-min_T, T_index, P_index, :] = forecastY
+                
+                else:
+                    for z_index, z in enumerate(z_list):
+                        model = model_list[z_index][T_index]
+                        model.fit(trainX[:, :P], trainY)
 
-    return beta_norm_sq, return_forecasts, strategy_returns
+                        forecastY = model.predict(forecastX[:P].reshape(1, -1))
+                        B = model.coef_
+
+                        # store results
+                        beta_norm_sq[t-min_T, T_index, P_index, z_index] = np.sum(np.square(B), axis=0)
+                        return_forecasts[t-min_T, T_index, P_index, z_index] = forecastY[0]
+
+
+    return beta_norm_sq, return_forecasts
 
 
 def run_simulation(seed, path_to_processed, path_to_outputs):
@@ -161,7 +133,6 @@ def run_simulation(seed, path_to_processed, path_to_outputs):
     path_to_outputs
         ├── beta_norm_sq/
         ├── return_forecasts/
-        ├── strategy_returns/
         ├── configs/
         └── config.json
 
@@ -186,23 +157,25 @@ def run_simulation(seed, path_to_processed, path_to_outputs):
         P_dict = config['P_dict']
         P_max = config['P_max']
         delta_t = config['delta_t']
-        solver = config['solver']
-        fit_intercept = config['fit_intercept']
-
-    # create dictionary of models for each T in T_list
-    model_dict = {T: [Ridge(alpha=T*z, fit_intercept=fit_intercept, solver=solver) 
-                        for z in z_list] for T in T_list}
+        
+        # solver = config['solver'] 
+        # delete try except block, force user to specify solver in the config file
+        try :
+            solver = config['solver']
+        except KeyError:
+            solver = "voc"
+            config['solver'] = solver
 
     # inputs
     G = data.iloc[:, :-1].values # remove last column which is the target variable
     R = data.iloc[:, -1].values  # target variable, already shifted in prereprocessing
     S = make_rff(G, P_max, gamma=gamma, seed=seed, output_type='numpy')
     run_inputs = (S, R)
-    run_params = (T_list, P_dict, model_dict)
+    run_params = (T_list, P_dict, z_list)
 
     st = time.time()
 
-    b, r, sr = single_run(run_inputs, run_params, delta_t)
+    b, r = single_run(run_inputs, run_params, delta_t, solver)
 
     et = time.time()
     elapsed_time = et - st
@@ -213,8 +186,6 @@ def run_simulation(seed, path_to_processed, path_to_outputs):
             f"/beta_norm_sq/{seed:04}beta_norm_sq.npy", b)
     np.save(path_to_outputs +
             f"/return_forecasts/{seed:04}return_forecasts.npy", r)
-    np.save(path_to_outputs+
-            f"/strategy_returns/{seed:04}strategy_returns.npy", sr)
     
     # save separate config file for each seed
     config['seed'] = seed
@@ -232,8 +203,9 @@ def run_simulation(seed, path_to_processed, path_to_outputs):
 
 
 if __name__ == '__main__':
+    # specify paths and config files only!!!
     path_to_processed = "data/processed" # specify this
-    path_to_outputs = "data/interim/final2_simulation_outputs" # specify this
+    path_to_outputs = "data/interim/simulation_outputs_sklearn_solver" # specify this
 
     # load the last and the max seeds from the config file
     with open(path_to_outputs+"/config.json", 'r') as fp:

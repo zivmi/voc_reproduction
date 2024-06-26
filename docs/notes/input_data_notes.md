@@ -38,6 +38,11 @@ All the links are provided on the [Goyal's website](https://sites.google.com/vie
 ### **Comparison with data used in VoC**
 All independent variables, except for `b/m` variable, have a perfect match with my data. The same is true for the returns, i.e. dependent variable. Variable `b/m` is provided directly by Goyal's methodology and it is not altered here. Thus, I can not access where the difference comes from. Note that the authors of VoC used slightly older dataset, so it could be that Goyal and Welch updated the methodology for calculating `b/m` in the meantime.
 
+
+## NBER Recession Indicator
+
+Data source https://fred.stlouisfed.org/series/USREC
+
 ## Notes from "Empirical Asset Pricing via ML"
 
 I skipped the Intro and Ch1.
