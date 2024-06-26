@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 def unpack_results(results, run_params, date_index):
-    beta_norm_sq, return_forecasts, strategy_returns = results
+    beta_norm_sq, return_forecasts = results
     T_list, P_dict, z_list = run_params
 
     Plen = len(P_dict[str(T_list[0])])
