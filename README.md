@@ -7,85 +7,63 @@ This project reproduces main empirical results from Kelly, Malamud and Zhou, 202
 
 **Comments and conclusions to be added latter.**
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/sr-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/sr-t12.png" width="320"/> 
-    </figure>
-</p>
+## Results Comparison
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/er-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/er-t12.png" width="320"/> 
-    </figure>
-</p>
+#### Figure 1: Sharpe ratio
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/r2-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/r2-t12.png" width="320"/> 
-    </figure>
-</p>
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/sr-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/sr-t12.png" width="520">
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/beta-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/beta-t12.png" width="320"/> 
-    </figure>
-</p>
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/vola-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/vola-t12.png" width="320"/> 
-    </figure>
-</p>
+#### Figure 2: Beta
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/alpha-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/alpha-t12.png" width="320"/> 
-    </figure>
-</p>
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/beta-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/beta-t12.png" width="520">
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/alpha-t-stat-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/alpha-t-stat-t12.png" width="320"/> 
-    </figure>
-</p>
 
-<p align="middle">
-    <figure style="display:inline-block">
-        <figcaption style="text-align:center;">Original results</figcaption>
-        <img src="./reports/figures/voc_figures/ir-t12.png" width="300"/>
-    </figure><figure style="display:inline-block; margin-left: -40px;">
-        <figcaption style="text-align:center;">Reproduced results</figcaption>
-        <img src="./reports/figures/curves_voc_solver/ir-t12.png" width="320"/> 
-    </figure>
-</p>
+#### Figure 3: ER
+
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/er-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/er-t12.png" width="520">
+
+
+#### Figure 4: R2
+
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/r2-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/r2-t12.png" width="520">
+
+
+#### Figure 5: Volatility
+
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/vola-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/vola-t12.png" width="520">
+
+
+#### Figure 6: Alpha
+
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/alpha-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/alpha-t12.png" width="520">
+
+
+#### Figure 7: Alpha T-Statistic
+
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/alpha-t-stat-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/alpha-t-stat-t12.png" width="520">
+
+
+#### Figure 8: Information ratio
+
+Original Results             |  Reproduced Results
+:-------------------------:|:-------------------------:
+<img src="./reports/figures/voc_figures/ir-t12.png" width="500">  |  <img src="./reports/figures/curves_voc_solver/ir-t12.png" width="520">
+
 
 
 
