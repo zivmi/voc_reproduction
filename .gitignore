@@ -96,7 +96,11 @@ target/
 # Simulation data
 /data/interim/*
 !/data/interim/interim_nonstd_data.csv
+!/data/interim/formatted_goyal_data.csv
 
-*.png
+# Reports
 /reports/*
-!/src/*
+!/reports/figures/curves_voc_solver/*
+!/reports/figures/voc_figures
+#!/reports/*.tex
+
