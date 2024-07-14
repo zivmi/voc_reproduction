@@ -100,7 +100,12 @@ target/
 
 # Reports
 /reports/*
-!/reports/figures/curves_voc_solver/*
-!/reports/figures/voc_figures
-#!/reports/*.tex
+!/reports/figures*
+
+# Figures
+/reports/figures/*
+!/reports/figures/voc_figures/
+!/reports/figures/curves_voc_solver/
+!/reports/figures/variable_importance/
+
 
