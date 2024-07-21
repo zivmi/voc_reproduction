@@ -32,16 +32,16 @@ The common wisdom in econometrics advocates for the usage of a simpler model ove
 
 ### General Setup
 
-Let's assume there exists the true predictive model of returns 
-$$
-R_{t+1}= f(G_t) + \epsilon_{t+1}
-$$
+Let's assume there exists the true predictive model of returns
+
+$$R_{t+1}= f(G_t) + \epsilon_{t+1}$$
+
 where $R_{t+1}$ is an asset return at time $t+1$, $G$ is a set of predictive signals, and $f$ is a smooth function. If it is known what signals are in the set $G$, we will call it "correctly specified model", otherwise, if only a subset of signals are known, we will call such a model "misspecified". In both cases, $f$ is an unknown function.
 
 We can try to approximate $f$ as
-$$
-f(G_t) \approx \sum_{i=1}^P S_{i,t}\beta_i
-$$
+
+$$f(G_t) \approx \sum_{i=1}^P S_{i,t}\beta_i$$
+
 where $S_{i,t} = \tilde{f}(\omega'_iG_t)$ is a nonlinear function, $\omega$ is a vector of weights. $P$ is the number of parameters $\beta_i$ of the model, and it will be used as a measure of the complexity of the model. As $P$ increases the approximation error decreases but the variance of the model will increase, leading to the well known problem of bias-variance trade-off. This would in theory lead to maximal variance as $P$ reaches the number of data points in the sample, $T$. For $P=T$ the model reaches zero in-sample loss, while the out-of-sample risk reaches its maximum.
 
 With the further increase in complexity, we enter into $P>T$ regime (also known as "interpolation regime"), where the out-of-sample risk of certain models will to decrease ("double descent" effect). For more on this topic see [TBA].
@@ -73,9 +73,8 @@ For details, see [02-mz-generate-RFF.ipynb](./notebooks/02-mz-generate-RFF.ipynb
 
 The least-squares estimators with $l_2$ regularization can be written as:
 
-$$
-\hat{\beta}(z) = \left( zI + T^{-1} \sum_t S_t S_t' \right)^{-1} \frac{1}{T} \sum_t S_t R_{t+1}
-$$
+$$\hat{\beta}(z) = \left( zI + T^{-1} \sum_t S_t S_t' \right)^{-1} \frac{1}{T} \sum_t S_t R_{t+1}$$
+
 Where $z$ is the shrinkage parameter of ridge regression.
 
 The choice of method of computing the inverse matrix is critical for isolating double descent effects from noise of individual simulation runs. For more details on precision and speed of different solvers, see [03-mz-voc-curve.ipynb](./notebooks/03-mz-voc-curve.ipynb).
