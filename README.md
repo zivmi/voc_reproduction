@@ -2,9 +2,9 @@
 
 This project reproduces main empirical results from Kelly, Malamud and Zhou, 2024, "[The virtue of complexity in return prediction](https://doi.org/10.1111/jofi.13298)".
 
-## TLDR; <!-- omit in toc -->
+## TL;DR: <!-- omit in toc -->
 
-The double descent appears in models for timing the stock market, given that the model is misspecified (ie. it uses only a subset of all informative features). The model used for the empirical analysis is a Ridge regression on Random Fourier Features (i.e. a two-layer NN with l2 regularization and random fixed weights in the hidden layer). Its expected OOS Sharpe Ratio improves monotonically as we increase the complexity (i.e. increase the number of RFFs). The trading strategy based on this model is trend-following, rarely goes short, and can time recessions. Thus, **don't worry about specifying the correct functional form of a trading strategy, but rather focus on selecting informative features, use l2, and go for the most complex model you can afford.**
+The double descent appears in Random Fourier Features model with $l_2$ model for timing the stock market, in terms of statistical and financial performance metrics. The trading strategy that invests in the market with a position that is proportional to the forecasted returns (without limitations on leverage, no trading costs, etc.) has expected OOS Sharpe Ratio which is monotonically increasing with the complexity of the model (i.e. the number of parameters of the model). The strategy is trend-following, rarely goes short, and can time recessions. Thus, the heuristics of using simple instead of complex pricing models (but benignly overfitting models, such as RF model)  has no justification from the perspective preventing the risk of overfitting. **Note:** there are NO indications that random feature models outperform the simple ridge regression model. In fact, the random feature model in the context of forecasting returns (in the most cases) learns only a linear approximation of the true pricing function - and it does so very inefficiently.
 
 - [Introduction](#introduction)
   - [General Setup](#general-setup)
